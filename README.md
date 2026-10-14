@@ -43,7 +43,7 @@ make clean-cache # 缓存出怪问题时清掉它（GOCACHE、仓库内的 .goca
 
 | 篇                                             | 内容                                                                                                                                                  |
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [00 工具链](docs/00-工具链.md)                 | `go doc` / `go vet` / `gofmt` / `-gcflags` / `go test -race` / `go fix` / `go tool trace`，以及语言版本门槛                                           |
+| [00 工具链](docs/00-工具链.md)                 | `go doc` / `go vet` / `gofmt` / `-gcflags` / `go test -race` / `go fix`，以及语言版本门槛                                                             |
 | [01 变量与基础类型](docs/01-变量与基础类型.md) | `var` / `:=` / 零值 / 作用域 / 基础类型与字面量 / 类型转换 / 格式化输出                                                                               |
 | [02 表达式与运算符](docs/02-表达式与运算符.md) | 算术（含整除与取模的符号、复数运算）、比较、逻辑、位运算与移位边界、一元运算符、优先级、内建函数（`len`/`cap`/`new`/`make`/`complex`/`min`/`max` 等） |
 | [03 控制流](docs/03-控制流.md)                 | `if` / `for` / `range` / `switch` / 标签跳转 / 循环变量语义                                                                                           |
@@ -88,26 +88,26 @@ make clean-cache # 缓存出怪问题时清掉它（GOCACHE、仓库内的 .goca
 
 从 `20` 开始进入标准库专题。这一组的读法和前面不同：**不是必须按顺序读的教程，而是按任务组织的参考**——每篇开头一句说明"这篇解决哪几类问题"，可以按需跳读；从头读的话，建议精读每篇的决策点与常见坑，API 细节留到用的时候再查。信息密度高是这类篇章的正常形态，不需要一次消化完。
 
-| 篇                                                     | 内容                                                                               |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| [20 字符串与字节](docs/20-字符串与字节.md)             | UTF-8 语义、`strings`、`bytes`、`strconv`、`unicode`、`Builder`                    |
-| [21 io 与流](docs/21-io与流.md)                        | `io.Reader`/`Writer`、`io` 工具函数、`bufio`                                       |
-| [22 文件与目录操作](docs/22-文件与目录操作.md)         | `os` 读写文件、目录操作、`Stat`/`Lstat`、权限与 umask、临时文件、`os.Root`         |
-| [23 路径与文件系统抽象](docs/23-路径与文件系统抽象.md) | `io/fs`、`path`/`filepath`、`fs.Sub`/`Glob`、遍历控制、`embed`                     |
-| [24 时间](docs/24-时间.md)                             | `time.Time`、单调时钟、格式化与解析、`Duration`、定时器                            |
-| [25 数学与随机数](docs/25-数学与随机数.md)             | `math`、`math/big`、`math/bits`、`math/rand/v2`、`crypto/rand`                     |
-| [26 JSON与序列化](docs/26-JSON与序列化.md)             | `encoding/json`（v1/v2 差异对照）、`jsontext`                                      |
-| [27 日志](docs/27-日志.md)                             | `log`、`log/slog`（级别、属性、Handler、两者桥接）                                 |
-| [28 UUID](docs/28-UUID.md)                             | `uuid`（Go 1.27 新增）：生成、解析、比较、版本选择                                 |
-| [29 命令行与正则](docs/29-命令行与正则.md)             | `flag`、`regexp`（RE2 语义与常见陷阱）                                             |
-| [30 网络与HTTP](docs/30-网络与HTTP.md)                 | `net/url`、`netip`、HTTP 客户端与服务端、`ServeMux` 路由、TLS、优雅关闭            |
-| [31 编码与序列化](docs/31-编码与序列化.md)             | base64/hex/binary、csv、xml、gob                                                   |
-| [32 压缩与归档](docs/32-压缩与归档.md)                 | `hash/crc32` 校验和、gzip、zip、tar（含路径穿越防护）                              |
-| [33 进程与信号](docs/33-进程与信号.md)                 | `os/exec`（不经 shell、超时、退出码）、`os/signal`、优雅退出                       |
-| [34 runtime 与性能剖析](docs/34-runtime与性能剖析.md)  | `runtime`、`runtime/debug`、`runtime/pprof`、`unique`、`weak`                      |
-| [35 reflect 与 unsafe](docs/35-reflect与unsafe.md)     | `reflect`、结构体标签、`unsafe` 零拷贝转换、内存布局与对齐、`structs.HostLayout`   |
-| [36 优先队列与模板](docs/36-优先队列与模板.md)         | `container/heap`（优先队列）、`text/template`/`html/template`                      |
-| [37 crypto 加密与哈希](docs/37-crypto加密与哈希.md)    | `crypto/sha256`/`sha3`、`crypto/mldsa`（后量子签名）、`crypto/ecdh`/`mlkem`/`hpke` |
+| 篇                                                     | 内容                                                                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| [20 字符串与字节](docs/20-字符串与字节.md)             | UTF-8 语义、`strings`、`bytes`、`strconv`、`unicode`、`Builder`                                                   |
+| [21 io 与流](docs/21-io与流.md)                        | `io.Reader`/`Writer`、`io` 工具函数、`bufio`                                                                      |
+| [22 文件与目录操作](docs/22-文件与目录操作.md)         | `os` 读写文件、目录操作、`Stat`/`Lstat`、权限与 umask、临时文件、`os.Root`                                        |
+| [23 路径与文件系统抽象](docs/23-路径与文件系统抽象.md) | `io/fs`、`path`/`filepath`、`fs.Sub`/`Glob`、遍历控制、`embed`                                                    |
+| [24 时间](docs/24-时间.md)                             | `time.Time`、单调时钟、格式化与解析、`Duration`、定时器                                                           |
+| [25 数学与随机数](docs/25-数学与随机数.md)             | `math`、`math/big`、`math/bits`、`math/rand/v2`、`crypto/rand`                                                    |
+| [26 JSON与序列化](docs/26-JSON与序列化.md)             | `encoding/json`（v1/v2 差异对照）、`jsontext`                                                                     |
+| [27 日志](docs/27-日志.md)                             | `log`、`log/slog`（级别、属性、Handler、两者桥接）                                                                |
+| [28 UUID](docs/28-UUID.md)                             | `uuid`（Go 1.27 新增）：生成、解析、比较、版本选择                                                                |
+| [29 命令行与正则](docs/29-命令行与正则.md)             | `flag`、`regexp`（RE2 语义与常见陷阱）                                                                            |
+| [30 网络与HTTP](docs/30-网络与HTTP.md)                 | `net/url`、`netip`、HTTP 客户端与服务端、`ServeMux` 路由、TLS、优雅关闭                                           |
+| [31 编码与序列化](docs/31-编码与序列化.md)             | base64/hex/binary、csv、xml、gob                                                                                  |
+| [32 压缩与归档](docs/32-压缩与归档.md)                 | `hash/crc32` 校验和、gzip、zip、tar（含路径穿越防护）                                                             |
+| [33 进程与信号](docs/33-进程与信号.md)                 | `os/exec`（不经 shell、超时、退出码）、`os/signal`、优雅退出                                                      |
+| [34 runtime 与性能剖析](docs/34-runtime与性能剖析.md)  | `runtime`、`runtime/debug`、`runtime/pprof`、`runtime/trace`（`go tool pprof`/`go tool trace`）、`unique`、`weak` |
+| [35 reflect 与 unsafe](docs/35-reflect与unsafe.md)     | `reflect`、结构体标签、`unsafe` 零拷贝转换、内存布局与对齐、`structs.HostLayout`                                  |
+| [36 优先队列与模板](docs/36-优先队列与模板.md)         | `container/heap`（优先队列）、`text/template`/`html/template`                                                     |
+| [37 crypto 加密与哈希](docs/37-crypto加密与哈希.md)    | `crypto/sha256`/`sha3`、`crypto/mldsa`（后量子签名）、`crypto/ecdh`/`mlkem`/`hpke`                                |
 
 ### 并发
 

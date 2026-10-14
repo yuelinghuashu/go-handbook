@@ -1,9 +1,9 @@
 # 34 runtime 与性能剖析
 
 > Go 版本：>= 1.27.1  
-> 相关标准库：runtime、runtime/debug、runtime/pprof、unique、weak
+> 相关标准库：runtime、runtime/debug、runtime/pprof、runtime/trace、unique、weak
 
-本篇讲与 Go 运行时打交道：用 `runtime` 读运行时状态、用 `runtime/debug` 看调用栈与模块信息、用 `runtime/pprof` 采集 CPU 与内存 profile，另外还有句柄驻留（`unique`）与弱引用（`weak`）这两个运行时能力。进程与信号见上一篇 `33-进程与信号.md`，反射与 `unsafe` 见 `35-reflect与unsafe.md`。
+本篇讲与 Go 运行时打交道：用 `runtime` 读运行时状态、用 `runtime/debug` 看调用栈与模块信息、用 `runtime/pprof` 采集 CPU 与内存 profile、用 `runtime/trace` + `go tool trace` 看时间线上发生了什么，另外还有句柄驻留（`unique`）与弱引用（`weak`）这两个运行时能力。进程与信号见上一篇 `33-进程与信号.md`，反射与 `unsafe` 见 `35-reflect与unsafe.md`。
 
 ## runtime
 
@@ -157,5 +157,58 @@ go tool pprof http://localhost:6060/debug/pprof/heap
 ```
 
 生产环境不要把 pprof handler 暴露到公网，它包含完整的函数名、路径和内存内容摘要。
+
+## runtime/trace 与 go tool trace：采集与查看
+
+`pprof` 回答"时间花在哪个函数上"，`runtime/trace` + `go tool trace` 回答的是**时间线上发生了什么**：哪个 goroutine 在什么时候运行、阻塞在什么上、GC 什么时候发生、调度器有没有让 P 空转。**这一节要用到 goroutine、调度器和 GC 这些运行时概念，还没读并发篇的话可以先跳过**，留着排查性能问题时再回来看。
+
+采集用标准库的 `runtime/trace`：
+
+```go
+f, _ := os.Create("trace.out")
+defer f.Close()
+
+if err := trace.Start(f); err != nil {
+    return err
+}
+defer trace.Stop()
+
+// 这里跑要观察的代码
+```
+
+然后用 `go tool trace` 打开生成的文件，它会启动一个本地 HTTP 服务：
+
+```bash
+go tool trace trace.out
+```
+
+回到采集环节，还有两条注意：
+
+- trace 的量很大，**只采几秒到几十秒**，采的是"典型负载"那一段；长时间开启会拖慢程序本身。
+- 服务进程建议像上面 pprof 那样挂到 HTTP 端点上抓取（`net/http/pprof` 的 `/debug/pprof/trace` 已经提供了这个端点），需要时抓一小段，而不是常开。
+
+采集本身**会暂停所有 goroutine 一小会儿**（start 和 stop 各一次），对延迟敏感的服务要避开关键路径。
+
+页面上给出几组视图，按"排查什么问题该看哪里"来记：
+
+- **Goroutine analysis**：按"main 函数"把 goroutine 分组，点进去能看到每组的**四种阻塞画像**，以及每个 goroutine 实例的执行统计——排查"goroutine 泄漏"和"卡在哪"最直接。
+- **四种阻塞画像**（都在 Profiles 一节，是"goroutine 为什么没在跑"的原因分解）：
+  - Network blocking profile：等网络
+  - Synchronization blocking profile：等 mutex/channel
+  - Syscall profile：等系统调用
+  - Scheduler latency profile：可运行但**排不上 P**，这个值高说明 GOMAXPROCS 偏小或有长任务霸占着 P
+- **User-defined tasks and regions**：如果你在代码里用 `trace.StartRegion` / `trace.NewTask` 标注了业务阶段，这里会给出每个阶段的耗时直方图。这是把 trace 从"运行时视角"变成"业务视角"的关键。
+- **Minimum mutator utilization**：GC 对业务代码的挤压程度，看尾延迟时有用。
+
+页面底部还有一个时间轴视图（Chromium 的 trace event 查看器），把每个 goroutine 的执行/阻塞片段按时间画出来，适合看并发程序的**结构性问题**（串行化、惊群、锁竞争）。
+
+```go
+ctx := context.Background()
+
+region := trace.StartRegion(ctx, "db-query")
+defer region.End()
+```
+
+goroutine 卡在哪一类阻塞上、`GOMAXPROCS` 与调度延迟的关系，分别见 `38-并发基础.md` 的“goroutine：启动之后没人管”一节和 `41-并发模式与运行时行为.md`。
 
 下一篇进入 [`35-reflect与unsafe.md`](35-reflect与unsafe.md)。

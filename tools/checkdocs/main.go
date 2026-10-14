@@ -339,7 +339,7 @@ var imports = map[string]string{
 	// 理由本身是错的，副作用是 22 篇所有 `fs.XXX` 的块连编译都进不去、永远查不了。
 	"fs":   "io/fs",
 	"exec": "os/exec", "signal": "os/signal", "runtime": "runtime", "debug": "runtime/debug",
-	"pprof": "runtime/pprof", "reflect": "reflect", "unsafe": "unsafe", "atomic": "sync/atomic",
+	"pprof": "runtime/pprof", "trace": "runtime/trace", "reflect": "reflect", "unsafe": "unsafe", "atomic": "sync/atomic",
 	"sync": "sync", "context": "context", "iter": "iter", "uuid": "uuid", "slog": "log/slog",
 	"log": "log", "big": "math/big", "bits": "math/bits", "cmplx": "math/cmplx", "rand": "math/rand/v2",
 	"template": "text/template", "heap": "container/heap", "sha256": "crypto/sha256",
