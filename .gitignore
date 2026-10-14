@@ -1,0 +1,23 @@
+# 构建产物
+/go-handbook
+*.exe
+*.test
+*.out
+
+# 覆盖率
+coverage.*
+*.coverprofile
+
+# 校验工具的临时目录（checkdocs 会自建）
+/checkdocs-*/
+
+# Go 构建缓存（受限环境下可能被指向仓库内）
+/.gocache/
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+AGENTS.md

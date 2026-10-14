@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          # 跟随 go.mod 里的 go 指令，避免这里硬编码版本号
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Run examples
+        run: go test ./...
+
+      # checkdocs 的块级缓存：文档没改动到的块不必在 CI 里重新编译运行。
+      # 键里带 docs 与工具自身的内容哈希，restore-keys 让"只改了几篇"也能续用旧缓存
+      # ——块级键本身就是内容哈希，续用旧条目不会让结论失真。
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/go-handbook
+          key: checkdocs-${{ runner.os }}-${{ hashFiles('docs/**/*.md', 'tools/checkdocs/**') }}
+          restore-keys: |
+            checkdocs-${{ runner.os }}-
+
+      - name: Check docs
+        run: go run ./tools/checkdocs -dir docs
