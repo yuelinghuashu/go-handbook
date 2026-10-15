@@ -233,11 +233,11 @@ fmt.Println(m) // map[a:1]
 
 ## 并发安全
 
-map 不是并发安全的。多个 goroutine（"同时有多个执行流"，并发本身在 `38-并发基础.md` 讲）同时读写同一个 map 会触发 `fatal error: concurrent map writes`（读写并发时是 `concurrent map read and map write`）。
+map 不是并发安全的。多个 goroutine（"同时有多个执行流"，并发本身在 `39-并发基础.md` 讲）同时读写同一个 map 会触发 `fatal error: concurrent map writes`（读写并发时是 `concurrent map read and map write`）。
 
 注意这是**致命错误，不是普通 panic**：它由运行时直接终止整个进程，`defer` 和 `recover` 都拦不住。所以 map 的并发保护必须在编码阶段就设计好，不能指望用 `recover` 兜底。
 
-需要并发读写时，用 `sync.RWMutex`（读多写少）或 `sync.Mutex` 把**每一次**访问都包起来，写法见 `38-并发基础.md`。另一条路是换用 `sync.Map`，但它只对两种访问模式有优势（键只写一次、之后反复读；或各 goroutine 读写互不相交的键集合），普通场景用 `map` 加锁更简单也更快，取舍见 `40-同步原语与内存模型.md`。
+需要并发读写时，用 `sync.RWMutex`（读多写少）或 `sync.Mutex` 把**每一次**访问都包起来，写法见 `39-并发基础.md`。另一条路是换用 `sync.Map`，但它只对两种访问模式有优势（键只写一次、之后反复读；或各 goroutine 读写互不相交的键集合），普通场景用 `map` 加锁更简单也更快，取舍见 `41-同步原语与内存模型.md`。
 
 ## 标准库 maps
 

@@ -325,7 +325,7 @@ type User struct {
 }
 ```
 
-标签本身不改变程序行为，由标准库或第三方库解析——`encoding/json` 读 `json` 键（见 `26-JSON与序列化.md`），`encoding/xml` 读 `xml` 键（见 `31-编码与序列化.md`）。
+标签本身不改变程序行为，由标准库或第三方库解析——`encoding/json` 读 `json` 键（见 `26-JSON与序列化.md`），`encoding/xml` 读 `xml` 键（见 `32-编码与序列化.md`）。
 
 标签的格式按约定是一串可选的、以空格分隔的 `key:"value"` 对：
 
@@ -338,7 +338,7 @@ type Config struct {
 - `key` 是非空字符串，由非控制字符组成，不能包含空格、双引号和冒号；
 - `value` 用双引号括起来，内部遵循 Go 字符串字面量语法。
 
-**格式不合约定时程序不会报错**：标签内容不合法不是编译错误，编译器完全不检查标签，只是 `reflect.StructTag.Get` 的返回值变成未定义的（当前实现返回空字符串）。这类错误只能靠工具发现：`go vet` 的 `structtag` 检查专门报告不符合 `reflect.StructTag.Get` 约定的字段标签——坏标签的例子与报错原文见 `00-工具链.md` 的“go vet：静态检查”一节。用 `reflect.StructTag` 的 `Get` / `Lookup` 在运行时读取标签（以及两者的区别）见 `35-reflect与unsafe.md` 的“读取结构体标签”一节。
+**格式不合约定时程序不会报错**：标签内容不合法不是编译错误，编译器完全不检查标签，只是 `reflect.StructTag.Get` 的返回值变成未定义的（当前实现返回空字符串）。这类错误只能靠工具发现：`go vet` 的 `structtag` 检查专门报告不符合 `reflect.StructTag.Get` 约定的字段标签——坏标签的例子与报错原文见 `00-工具链.md` 的“go vet：静态检查”一节。用 `reflect.StructTag` 的 `Get` / `Lookup` 在运行时读取标签（以及两者的区别）见 `36-reflect与unsafe.md` 的“读取结构体标签”一节。
 
 ## 空结构体
 
@@ -361,7 +361,7 @@ if _, ok := s["a"]; ok {
 
 结构体的大小**不等于**各字段大小之和：每个字段的起始地址必须满足它自己的对齐要求，编译器会在字段之间和结构体末尾插入填充字节（padding），所以**字段顺序会直接改变结构体大小**。按"宽度从大到小"排列通常最省内存，但可读性更重要——只有结构体实例非常多、或者需要和外部二进制格式对齐时，才值得为布局专门调整字段顺序。
 
-这一块的具体规则（填充位置、`unsafe.Sizeof`/`Offsetof`/`Alignof` 的实测字节数、`structs.HostLayout` 与 C ABI 布局）都要用 `unsafe` 才能观察，涉及指针（`10-指针.md`）和 `unsafe` 包，统一放在 `35-reflect与unsafe.md` 的“内存布局与 unsafe”一节。
+这一块的具体规则（填充位置、`unsafe.Sizeof`/`Offsetof`/`Alignof` 的实测字节数、`structs.HostLayout` 与 C ABI 布局）都要用 `unsafe` 才能观察，涉及指针（`10-指针.md`）和 `unsafe` 包，统一放在 `36-reflect与unsafe.md` 的“内存布局与 unsafe”一节。
 
 ## 结构体与指针
 

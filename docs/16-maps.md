@@ -203,7 +203,7 @@ fmt.Println(len(m)) // 0，但堆上那块表还在
 
 ### 自己测量
 
-想自己看这个现象，用 `runtime.ReadMemStats` 前后对比堆占用（`runtime` 包本身在 `34-runtime与性能剖析.md` 讲；同一个进程里测量，看的是**相对变化**而不是绝对 MiB）：
+想自己看这个现象，用 `runtime.ReadMemStats` 前后对比堆占用（`runtime` 包本身在 `35-runtime与性能剖析.md` 讲；同一个进程里测量，看的是**相对变化**而不是绝对 MiB）：
 
 ```go
 var ms runtime.MemStats

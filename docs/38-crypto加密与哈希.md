@@ -1,4 +1,4 @@
-# 37 crypto 加密与哈希
+# 38 37 crypto 加密与哈希
 
 > Go 版本：>= 1.27.1  
 > 相关标准库：crypto/sha256、crypto/sha3、crypto/mldsa、crypto/ecdh、crypto/mlkem、crypto/hpke
@@ -159,4 +159,4 @@ fmt.Println(string(pt), err) // 原来的载荷 <nil>
 
 密码学用途要和普通数据结构的用途分清：内容校验、去重、缓存 key 用 `map` 或 `hash/maphash` 就够，用不到 `crypto` 下的包；反过来，凡是涉及防伪造、防猜测的地方都必须用标准库的密码学原语，不要自己拼一个。
 
-下一篇进入 [`38-并发基础.md`](38-并发基础.md)。
+下一篇进入 [`39-并发基础.md`](39-并发基础.md)。

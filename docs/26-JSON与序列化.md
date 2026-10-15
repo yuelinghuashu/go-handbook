@@ -325,7 +325,7 @@ if err := jsonv2.UnmarshalDecode(decoder, &u); err != nil {
 
 ## encoding/json/jsontext
 
-`jsontext` 是 JSON 的底层文本处理包，适合流式读取和写入。同样是"按 token 流式读"，XML 侧的对应物是 `xml.Decoder.Token`（见 `31-编码与序列化.md` 的“encoding/xml”一节）。
+`jsontext` 是 JSON 的底层文本处理包，适合流式读取和写入。同样是"按 token 流式读"，XML 侧的对应物是 `xml.Decoder.Token`（见 `32-编码与序列化.md` 的“encoding/xml”一节）。
 
 ### 读取 Token
 

@@ -1,12 +1,12 @@
 # go-handbook
 
-一套**体系化的中文 Go 学习笔记**：42 篇正文，配 130 个可运行示例，以及一个把文档当测试跑的校验工具。**面向有其他语言经验的开发者**——不从"什么是变量"讲起，直接进入 Go 的语法、标准库与工程实践。
+一套**体系化的中文 Go 学习笔记**：43 篇正文，配 130 个可运行示例，以及一个把文档当测试跑的校验工具。**面向有其他语言经验的开发者**——不从"什么是变量"讲起，直接进入 Go 的语法、标准库与工程实践。
 
-正文按主题编号（`00`–`41`），从变量声明讲到并发模式，示例全部基于 **Go 1.27**。与常见"语法速查"不同的是，这里的每一条结论都尽量落到可验证的代码上——示例输出写错会直接让 CI 失败。
+正文按主题编号（`00`–`42`），从变量声明讲到并发模式，示例全部基于 **Go 1.27**。与常见"语法速查"不同的是，这里的每一条结论都尽量落到可验证的代码上——示例输出写错会直接让 CI 失败。
 
 ## 特点
 
-- **42 篇编号正文**：每篇一个主题，前一篇的结论就是后一篇的前提，按顺序读即可；也可以当参考手册按需查阅。
+- **43 篇编号正文**：每篇一个主题，前一篇的结论就是后一篇的前提，按顺序读即可；也可以当参考手册按需查阅。
 - **130 个可运行示例**：写成 `Example` 函数放在 [`examples/`](examples/)，末尾用 `// Output:` 声明期望输出，`go test` 会真的执行并逐字比对；另有 3 个 `Test` 与 1 个 `Fuzz` 目标覆盖 `Example` 表达不了的语义（真实超时、`t.Context` 的取消时机、种子语料）。
 - **文档即测试**：[`tools/checkdocs`](tools/checkdocs) 直接在 Markdown 上校验三类问题——跨篇引用是否断链、小节锚点是否存在、代码块的期望输出是否与真实运行结果一致。
 - **只讲经过实测的内容**：版本号标注（哪个 API 从哪个 Go 版本开始有）、编译器报错原文、输出结果，都按本机工具链实际跑过再写。
@@ -18,7 +18,7 @@ git clone https://github.com/yuelinghuashu/go-handbook.git
 cd go-handbook
 
 go test ./...                              # 跑全部 130 个示例
-go run ./tools/checkdocs -dir docs         # 校验全部 42 篇文档
+go run ./tools/checkdocs -dir docs         # 校验全部 43 篇文档
 ```
 
 装了 `make` 的话：
@@ -99,30 +99,31 @@ make clean-cache # 缓存出怪问题时清掉它（GOCACHE、仓库内的 .goca
 | [26 JSON与序列化](docs/26-JSON与序列化.md)             | `encoding/json`（v1/v2 差异对照）、`jsontext`                                                                     |
 | [27 日志](docs/27-日志.md)                             | `log`、`log/slog`（级别、属性、Handler、两者桥接）                                                                |
 | [28 UUID](docs/28-UUID.md)                             | `uuid`（Go 1.27 新增）：生成、解析、比较、版本选择                                                                |
-| [29 命令行与正则](docs/29-命令行与正则.md)             | `flag`、`regexp`（RE2 语义与常见陷阱）                                                                            |
-| [30 网络与HTTP](docs/30-网络与HTTP.md)                 | `net/url`、`netip`、HTTP 客户端与服务端、`ServeMux` 路由、TLS、优雅关闭                                           |
-| [31 编码与序列化](docs/31-编码与序列化.md)             | base64/hex/binary、csv、xml、gob                                                                                  |
-| [32 压缩与归档](docs/32-压缩与归档.md)                 | `hash/crc32` 校验和、gzip、zip、tar（含路径穿越防护）                                                             |
-| [33 进程与信号](docs/33-进程与信号.md)                 | `os/exec`（不经 shell、超时、退出码）、`os/signal`、优雅退出                                                      |
-| [34 runtime 与性能剖析](docs/34-runtime与性能剖析.md)  | `runtime`、`runtime/debug`、`runtime/pprof`、`runtime/trace`（`go tool pprof`/`go tool trace`）、`unique`、`weak` |
-| [35 reflect 与 unsafe](docs/35-reflect与unsafe.md)     | `reflect`、结构体标签、`unsafe` 零拷贝转换、内存布局与对齐、`structs.HostLayout`                                  |
-| [36 优先队列与模板](docs/36-优先队列与模板.md)         | `container/heap`（优先队列）、`text/template`/`html/template`                                                     |
-| [37 crypto 加密与哈希](docs/37-crypto加密与哈希.md)    | `crypto/sha256`/`sha3`、`crypto/mldsa`（后量子签名）、`crypto/ecdh`/`mlkem`/`hpke`                                |
+| [29 命令行参数](docs/29-命令行参数.md)                 | `os.Args`、`flag`（含子命令模式）                                                                                 |
+| [30 regexp](docs/30-regexp.md)                         | RE2 语义、匹配与替换、常见陷阱                                                                                    |
+| [31 网络与HTTP](docs/31-网络与HTTP.md)                 | `net/url`、`netip`、HTTP 客户端与服务端、`ServeMux` 路由、TLS、优雅关闭                                           |
+| [32 编码与序列化](docs/32-编码与序列化.md)             | base64/hex/binary、csv、xml、gob                                                                                  |
+| [33 压缩与归档](docs/33-压缩与归档.md)                 | `hash/crc32` 校验和、gzip、zip、tar（含路径穿越防护）                                                             |
+| [34 进程与信号](docs/34-进程与信号.md)                 | `os/exec`（不经 shell、超时、退出码）、`os/signal`、优雅退出                                                      |
+| [35 runtime 与性能剖析](docs/35-runtime与性能剖析.md)  | `runtime`、`runtime/debug`、`runtime/pprof`、`runtime/trace`（`go tool pprof`/`go tool trace`）、`unique`、`weak` |
+| [36 reflect 与 unsafe](docs/36-reflect与unsafe.md)     | `reflect`、结构体标签、`unsafe` 零拷贝转换、内存布局与对齐、`structs.HostLayout`                                  |
+| [37 优先队列与模板](docs/37-优先队列与模板.md)         | `container/heap`（优先队列）、`text/template`/`html/template`                                                     |
+| [38 crypto 加密与哈希](docs/38-crypto加密与哈希.md)    | `crypto/sha256`/`sha3`、`crypto/mldsa`（后量子签名）、`crypto/ecdh`/`mlkem`/`hpke`                                |
 
 ### 并发
 
 | 篇                                                         | 内容                                                                              |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [38 并发基础](docs/38-并发基础.md)                         | goroutine、channel、`select`、`sync.WaitGroup`、数据竞争                          |
-| [39 context](docs/39-context.md)                           | 取消与传播、deadline 与超时、`Done`/`Err`/`Cause`、请求范围内的值、与标准库的衔接 |
-| [40 同步原语与内存模型](docs/40-同步原语与内存模型.md)     | `sync.Map`/`Once`/`Cond`、`sync/atomic`、happens-before                           |
-| [41 并发模式与运行时行为](docs/41-并发模式与运行时行为.md) | worker pool、pipeline、goroutine 泄漏排查、`GOMAXPROCS`、`testing/synctest`       |
+| [39 并发基础](docs/39-并发基础.md)                         | goroutine、channel、`select`、`sync.WaitGroup`、数据竞争                          |
+| [40 context](docs/40-context.md)                           | 取消与传播、deadline 与超时、`Done`/`Err`/`Cause`、请求范围内的值、与标准库的衔接 |
+| [41 同步原语与内存模型](docs/41-同步原语与内存模型.md)     | `sync.Map`/`Once`/`Cond`、`sync/atomic`、happens-before                           |
+| [42 并发模式与运行时行为](docs/42-并发模式与运行时行为.md) | worker pool、pipeline、goroutine 泄漏排查、`GOMAXPROCS`、`testing/synctest`       |
 
 ## 仓库结构
 
 ```text
 go-handbook/
-├── docs/                 # 42 篇正文
+├── docs/                 # 43 篇正文
 ├── examples/             # 130 个可运行示例（含 Test/Fuzz 兜底）
 ├── tools/checkdocs/      # 文档校验工具（断链 / 锚点 / 示例输出）
 ├── Makefile              # make test | check | check-fast | verify | clean-cache
@@ -135,7 +136,7 @@ go-handbook/
 ## 阅读与使用约定
 
 - **示例是片段，不是完整程序**。需要完整程序时会写成 `func main() { ... }`；片段里出现裸 `return err` 时，表示它写在"你自己的、返回 `error` 的函数"里。**想知道某一段能不能单独跑**，跑一次 `make check`：输出里"有期望输出但没能运行"的那份清单（加 `-unbuilt` 看完整版）就是当前依赖前文定义的片段。
-- **版本标注以 Go 1.27 为准，且全仓只维护一份**。文中"Go 1.x 起"的说法都核对过标准库的 API 历史；标注了新版本的特性会同时说明**低于该版本会怎么报错**。每篇篇首的 `> Go 版本：>= 1.27.1` 就是该篇的适用门槛（不必翻到别处确认），`go.mod` 的 `go` 指令是同一条信息的机器可读副本；`tools/checkdocs` 会校验"每篇都有、彼此一致、且与 `go.mod` 同版本"，并用这个版本去编译文档里的示例——**升级 Go 时改这 43 处（42 篇 + `go.mod`）即可，漏改任何一处 CI 都会当场指出来**。
+- **版本标注以 Go 1.27 为准，且全仓只维护一份**。文中"Go 1.x 起"的说法都核对过标准库的 API 历史；标注了新版本的特性会同时说明**低于该版本会怎么报错**。每篇篇首的 `> Go 版本：>= 1.27.1` 就是该篇的适用门槛（不必翻到别处确认），`go.mod` 的 `go` 指令是同一条信息的机器可读副本；`tools/checkdocs` 会校验"每篇都有、彼此一致、且与 `go.mod` 同版本"，并用这个版本去编译文档里的示例——**升级 Go 时改这 43 处（43 篇 + `go.mod`）即可，漏改任何一处 CI 都会当场指出来**。
 - **只提供标准库**。除了标准库和 `golang.org/x/...` 的顺带提及，不引入第三方依赖——这也是所有示例都能直接 `go test` 的原因。
 - **"一行一个 API"的清单式代码块要带作用注释**：每行（或同族的几行）**上方**写一条 `// 名字：一句话作用`，措辞以 `go doc <pkg>.<名字>` 的描述为准；输出值仍然写在行尾（那些注释会被 `tools/checkdocs` 当成断言比对）。
 - **代码块按用途标注语言**：能直接粘进终端执行的命令标 `bash`，示例输出、报错原文、目录树、数据清单标 `text`，Go 代码标 `go`；"命令 + 输出"的会话转录也标 `text`（惯例带 `$` 提示符）。这样 `bash` 始终等于"可以直接跑"，读者从复制按钮拿到的就是能用的命令。

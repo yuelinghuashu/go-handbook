@@ -1,11 +1,11 @@
-# 39 context
+# 40 39 context
 
 > Go 版本：>= 1.27.1  
 > 相关标准库：context、time
 
 本篇只讲 `context`：**取消信号、deadline 和请求范围内的值**怎么在调用链上传递。它看起来像个"并发包"，其实更像一条**接口约定**——凡是可能耗时的函数都该接受它，而 HTTP、`os/exec`、数据库、日志这些标准库接口早就接受了它。
 
-本篇的前置是 `38-并发基础.md` 里的 goroutine、channel 与 `select`。
+本篇的前置是 `39-并发基础.md` 里的 goroutine、channel 与 `select`。
 
 Go **不会自动**把取消传下去。跨函数、跨 goroutine 都不会"继承"任何东西，必须由调用方把同一个 `ctx` 显式一路传下去；不传，下游就永远不知道上游已经放弃。
 
@@ -201,12 +201,12 @@ fmt.Println(detached.Value(key{}))   // req-1——值仍然继承
 | 场景         | 接口                                           | 说明                                                              |
 | ------------ | ---------------------------------------------- | ----------------------------------------------------------------- |
 | HTTP 服务端  | `http.Request.Context()`                       | 取当前请求的 ctx，请求结束时自动取消                              |
-| HTTP 客户端  | `http.NewRequestWithContext`                   | 用同一个 ctx 发出站请求（见 `30-网络与HTTP.md`）                  |
-| 执行外部命令 | `exec.CommandContext`                          | ctx 取消时杀掉子进程（见 `33-进程与信号.md`）                     |
+| HTTP 客户端  | `http.NewRequestWithContext`                   | 用同一个 ctx 发出站请求（见 `31-网络与HTTP.md`）                  |
+| 执行外部命令 | `exec.CommandContext`                          | ctx 取消时杀掉子进程（见 `34-进程与信号.md`）                     |
 | 数据库       | `database/sql` 的 `QueryContext`/`ExecContext` | 让慢查询随请求一起结束                                            |
-| 操作系统信号 | `signal.NotifyContext`                         | 把 Ctrl+C / SIGTERM 变成一个 ctx（见 `33-进程与信号.md`）         |
+| 操作系统信号 | `signal.NotifyContext`                         | 把 Ctrl+C / SIGTERM 变成一个 ctx（见 `34-进程与信号.md`）         |
 | 结构化日志   | `slog.Logger.LogAttrs(ctx, …)`                 | 让日志带上请求上下文（见 `27-日志.md`）                           |
-| 超时测试     | `testing/synctest`                             | 用假时钟测超时逻辑，不用真的等（见 `41-并发模式与运行时行为.md`） |
+| 超时测试     | `testing/synctest`                             | 用假时钟测超时逻辑，不用真的等（见 `42-并发模式与运行时行为.md`） |
 
 ## 常见坑
 
@@ -218,4 +218,4 @@ fmt.Println(detached.Value(key{}))   // req-1——值仍然继承
 - **用 `ctx.Value` 传业务参数**：签名变隐形、链式查找变慢、取出来还要类型断言——它是给元数据留的。
 - **拿 `Background().Done()` 参与 `select`**：永不取消的 context 的 `Done()` 是 `nil` channel，`select` 永远不会选中它，会一直阻塞。
 
-下一篇进入 [`40-同步原语与内存模型.md`](40-同步原语与内存模型.md)。
+下一篇进入 [`41-同步原语与内存模型.md`](41-同步原语与内存模型.md)。

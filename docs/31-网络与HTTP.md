@@ -1,4 +1,4 @@
-# 30 网络与HTTP
+# 31 30 网络与HTTP
 
 > Go 版本：>= 1.27.1  
 > 相关标准库：net、net/url、net/http、crypto/tls、context、errors、os/signal、syscall
@@ -95,7 +95,7 @@ fmt.Println(resp.StatusCode, string(body))
 
 `resp.Body` 必须关闭。想复用底层连接，还要在关闭前把 body 读干净——没读到 EOF 就 `Close`，连接会被丢弃（`io.Copy(io.Discard, resp.Body)` 再 `Close`）。
 
-需要设置 header、指定方法或加超时时，自己构造请求（下面用 `context.WithTimeout` 给这次请求设总时限，`context` 的完整讲解见 `39-context.md`）：
+需要设置 header、指定方法或加超时时，自己构造请求（下面用 `context.WithTimeout` 给这次请求设总时限，`context` 的完整讲解见 `40-context.md`）：
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -207,7 +207,7 @@ mux.HandleFunc("/health", fn)
 
 框架仍然有它的价值（它管哪些事见文末“边界”）。但"标准库 mux 只能写个健康检查"已经过时了——纯 JSON API、内部服务这类场景完全可以不上框架。
 
-一条不变的注意事项：`http.DefaultServeMux` 是全局变量，任何导入的库都能往里注册 handler（`net/http/pprof` 就是这么做的，见 `34-runtime与性能剖析.md`），生产代码不要往全局 mux 上挂自己的路由，用 `http.NewServeMux()` 建自己的。
+一条不变的注意事项：`http.DefaultServeMux` 是全局变量，任何导入的库都能往里注册 handler（`net/http/pprof` 就是这么做的，见 `35-runtime与性能剖析.md`），生产代码不要往全局 mux 上挂自己的路由，用 `http.NewServeMux()` 建自己的。
 
 ### http.Server 该配的字段
 
@@ -230,7 +230,7 @@ server := &http.Server{
 
 ### 优雅关闭
 
-进程收到信号后不能直接退出，否则在途请求会被切断。标准组合是 `signal.NotifyContext` + `Server.Shutdown`（下面用 goroutine 把 `ListenAndServe` 挪到后台，语法见 `38-并发基础.md` 的“goroutine：启动之后没人管”一节）：
+进程收到信号后不能直接退出，否则在途请求会被切断。标准组合是 `signal.NotifyContext` + `Server.Shutdown`（下面用 goroutine 把 `ListenAndServe` 挪到后台，语法见 `39-并发基础.md` 的“goroutine：启动之后没人管”一节）：
 
 ```go
 server := &http.Server{Addr: ":8080", Handler: handler}
@@ -311,7 +311,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 两个容易出错的地方：
 
 - **链路上任何一环丢掉 `ctx`**（换成 `context.Background()`，或用不带 ctx 的下游调用），客户端断开后取消就无法传播，后面的查询、RPC 会继续空转。
-- **需要比请求活得更久的任务**（写审计日志、投递异步消息）必须换 context：`context.WithoutCancel(r.Context())` 不再随请求取消，但保留请求内的值（它没有 deadline 和 Done，所以记得自己再套一个超时，写法见 `39-context.md` 的“WithoutCancel：脱离父 context 的取消”一节）。直接拿 `r.Context()` 起后台 goroutine 是典型 bug——请求一结束它立刻被取消。
+- **需要比请求活得更久的任务**（写审计日志、投递异步消息）必须换 context：`context.WithoutCancel(r.Context())` 不再随请求取消，但保留请求内的值（它没有 deadline 和 Done，所以记得自己再套一个超时，写法见 `40-context.md` 的“WithoutCancel：脱离父 context 的取消”一节）。直接拿 `r.Context()` 起后台 goroutine 是典型 bug——请求一结束它立刻被取消。
 
 ### 请求体大小限制
 
@@ -446,4 +446,4 @@ back, ok := netip.AddrFromSlice(ip) // net.IP -> netip.Addr，ok 为 false 表�
 
 CSRF 防护平时由框架中间件负责，但标准库在 Go 1.25 起也提供了 `http.NewCrossOriginProtection()`——没有框架时可以用它包一层 handler（`protection.Handler(mux)`），它靠 `Sec-Fetch-Site` 或 `Origin`/`Host` 比对来拒绝跨源的非安全请求。
 
-下一篇进入 [`31-编码与序列化.md`](31-编码与序列化.md)。
+下一篇进入 [`32-编码与序列化.md`](32-编码与序列化.md)。

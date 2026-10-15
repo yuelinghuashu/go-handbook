@@ -1,9 +1,9 @@
-# 34 runtime 与性能剖析
+# 35 34 runtime 与性能剖析
 
 > Go 版本：>= 1.27.1  
 > 相关标准库：runtime、runtime/debug、runtime/pprof、runtime/trace、unique、weak
 
-本篇讲与 Go 运行时打交道：用 `runtime` 读运行时状态、用 `runtime/debug` 看调用栈与模块信息、用 `runtime/pprof` 采集 CPU 与内存 profile、用 `runtime/trace` + `go tool trace` 看时间线上发生了什么，另外还有句柄驻留（`unique`）与弱引用（`weak`）这两个运行时能力。进程与信号见上一篇 `33-进程与信号.md`，反射与 `unsafe` 见 `35-reflect与unsafe.md`。
+本篇讲与 Go 运行时打交道：用 `runtime` 读运行时状态、用 `runtime/debug` 看调用栈与模块信息、用 `runtime/pprof` 采集 CPU 与内存 profile、用 `runtime/trace` + `go tool trace` 看时间线上发生了什么，另外还有句柄驻留（`unique`）与弱引用（`weak`）这两个运行时能力。进程与信号见上一篇 `34-进程与信号.md`，反射与 `unsafe` 见 `36-reflect与unsafe.md`。
 
 ## runtime
 
@@ -13,7 +13,7 @@
 fmt.Println(runtime.NumCPU()) // 逻辑 CPU 数
 ```
 
-`GOMAXPROCS` 的默认值、容器 CPU 限额和 `SetDefaultGOMAXPROCS` 都在并发篇里讲，见 `41-并发模式与运行时行为.md`。
+`GOMAXPROCS` 的默认值、容器 CPU 限额和 `SetDefaultGOMAXPROCS` 都在并发篇里讲，见 `42-并发模式与运行时行为.md`。
 
 查看内存统计：
 
@@ -139,7 +139,7 @@ if err := pprof.Lookup("goroutine").WriteTo(os.Stderr, 1); err != nil {
 
 GC 调优用 `debug.SetGCPercent`（对应 `GOGC`）、`debug.SetMemoryLimit`（软内存上限）、`debug.FreeOSMemory`（强制 GC 并把内存还给操作系统）。这些都会改变整机行为，**只在 profile 指出问题之后再用**，不要凭感觉调；设置环境变量通常比在代码里调用更合适。
 
-服务进程通常不做手工采样，而是把 profile 挂到 HTTP 上（这里的 goroutine 见 `38-并发基础.md` 的“goroutine：启动之后没人管”一节）：
+服务进程通常不做手工采样，而是把 profile 挂到 HTTP 上（这里的 goroutine 见 `39-并发基础.md` 的“goroutine：启动之后没人管”一节）：
 
 ```go
 import _ "net/http/pprof"
@@ -209,6 +209,6 @@ region := trace.StartRegion(ctx, "db-query")
 defer region.End()
 ```
 
-goroutine 卡在哪一类阻塞上、`GOMAXPROCS` 与调度延迟的关系，分别见 `38-并发基础.md` 的“goroutine：启动之后没人管”一节和 `41-并发模式与运行时行为.md`。
+goroutine 卡在哪一类阻塞上、`GOMAXPROCS` 与调度延迟的关系，分别见 `39-并发基础.md` 的“goroutine：启动之后没人管”一节和 `42-并发模式与运行时行为.md`。
 
-下一篇进入 [`35-reflect与unsafe.md`](35-reflect与unsafe.md)。
+下一篇进入 [`36-reflect与unsafe.md`](36-reflect与unsafe.md)。

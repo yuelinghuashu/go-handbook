@@ -1,9 +1,9 @@
-# 35 reflect 与 unsafe
+# 36 35 reflect 与 unsafe
 
 > Go 版本：>= 1.27.1  
 > 相关标准库：reflect、unsafe、structs
 
-本篇讲两件"绕过类型系统"的事：`reflect` 在运行时检查类型与值（读结构体标签、动态取值），`unsafe` 加内存布局（`unsafe.Sizeof`/`Offsetof`/`Alignof`、零拷贝转换、`structs.HostLayout`）用来看清一个值在内存里到底占多少、字段落在哪里。前两篇分别讲进程与信号（`33-进程与信号.md`）和 runtime 与性能剖析（`34-runtime与性能剖析.md`）。
+本篇讲两件"绕过类型系统"的事：`reflect` 在运行时检查类型与值（读结构体标签、动态取值），`unsafe` 加内存布局（`unsafe.Sizeof`/`Offsetof`/`Alignof`、零拷贝转换、`structs.HostLayout`）用来看清一个值在内存里到底占多少、字段落在哪里。前两篇分别讲进程与信号（`34-进程与信号.md`）和 runtime 与性能剖析（`35-runtime与性能剖析.md`）。
 
 读这一篇要先熟悉指针（`10-指针.md`）和接口（`12-接口.md`）：`unsafe.Pointer` 建立在指针之上，`reflect` 的 `Value` 围绕接口的动态类型工作。
 
@@ -306,4 +306,4 @@ fmt.Println(unsafe.Sizeof(S{})) // 16
 
 看自己包的汇编用 `go build -gcflags='-S'` 更省事（见 `00-工具链.md` 的"go build -gcflags"）；`go tool objdump` 的价值在于**对已经编译好的二进制**做同样的事，排查线上问题时不用重新构建。
 
-下一篇进入 [`36-优先队列与模板.md`](36-优先队列与模板.md)。
+下一篇进入 [`37-优先队列与模板.md`](37-优先队列与模板.md)。
