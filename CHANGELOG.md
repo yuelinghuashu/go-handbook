@@ -6,9 +6,13 @@
 
 ### 变更
 
-- `00-工具链.md` 删去 `## go tool pprof` 与 `## go tool trace` 两个小节，压成一段指路，指向 `34-runtime与性能剖析.md`。
-- `34-runtime与性能剖析.md` 的 trace 一节改名 `## runtime/trace 与 go tool trace：采集与查看`，补上采集用法（`trace.Start`/`trace.Stop`、`go tool trace trace.out`、采集注意事项）；篇首「相关标准库」补 `runtime/trace`。
-- `README.md` 目录：00 篇条目去掉 `go tool trace`，34 篇条目补上 `go tool pprof`/`go tool trace`。
+- 00 篇删去 `## go tool pprof`、`## go tool trace` 两节，压成指路；两个工具归到 34 篇，该节改名 `## runtime/trace 与 go tool trace：采集与查看`；README 目录同步。
+- 示例的错误分支统一成"打印 + `return`"：`log.Fatal`/`log.Fatalf` 66 处，示例程序式块里的顶层 `return err` 68 处（26 篇 19、其余 11 篇 49）；讲 `log` 语义、"进程该退出"的 2 处，以及块内没有结果打印的函数体片段（05 篇讲错误上抛、04 篇讲函数返回等）保留原写法；01、22 篇讲这条约定的文字随之改写。
+- 21 篇：9 处不可能失败的 err 收成 `_`、2 处 `scanner.Err()` 改成可断言，新增 `## 选择与坑`，三节标"进阶，可以跳过"，删重复与元话语。
+- 24 篇：新增 `### 本地时间与 UTC`；扩写定时器一节（补 `Stop`/`Reset` 返回值语义、`AfterFunc`、Go 1.23 起通道无缓冲），删掉重复的 `select` 示例与信号通道；`## 选择与坑` 改表格。
+- 25 篇：新增 `### 任意区间`（平移写法与三条坑），`crypto/rand`、选包清单同步，去掉两处重复。
+- 其余修正：26 篇把 v1 节里那个 `jsonv2` 代码块改成指路（那处 v2 提到得太早）、`## encoding/json/v2` 开头接上前文而不是从"导入"起头；23 篇 `embed` 补"什么时候用"与两个坑；20 篇修正 `utf8.DecodeRuneInString` 的期望输出；25 篇把写在输出位置的类型说明改成真断言。
+- `tools/checkdocs`：期望输出判定反转（字母、符号开头的注释也当断言）、新增"函数体片段"提示与 `-wrapped`、补回归测试。
 
 ## [1.0.0] - 2026-10-13
 

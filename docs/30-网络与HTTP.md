@@ -14,7 +14,8 @@
 ```go
 u, err := url.Parse("https://example.com/path?name=tom&age=18")
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(u.Scheme)   // https
@@ -51,7 +52,8 @@ fmt.Println(v.Encode()) // q=golang&tag=go
 
 values, err := url.ParseQuery("a=1&a=2&b=3")
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(values["a"]) // [1 2]
@@ -61,7 +63,8 @@ fmt.Println(url.QueryEscape("a b"))  // a+b
 
 joined, err := url.JoinPath("https://example.com", "api", "v1", "users")
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(joined) // https://example.com/api/v1/users
@@ -74,13 +77,15 @@ Go 1.27 给这两个类型都加了 `Clone`：`u.Clone()` 得到 `*url.URL` 的�
 ```go
 resp, err := http.Get("https://example.com")
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 defer resp.Body.Close()
 
 body, err := io.ReadAll(resp.Body)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(resp.StatusCode, string(body))
@@ -268,8 +273,9 @@ server := &http.Server{
     ReadHeaderTimeout: 5 * time.Second,
 }
 
-if err := server.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
-    log.Fatal(err)
+if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+    fmt.Println(err)
+    return
 }
 ```
 

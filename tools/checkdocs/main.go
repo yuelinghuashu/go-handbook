@@ -10,6 +10,7 @@
 //	go run . -dir ../../docs
 //	go run . -dir ../../docs -examples=false   # 只做 1、2、3 三项（很快）
 //	go run . -dir ../../docs -all              # 诊断用：连没有期望输出的块也编译一遍
+//	go run . -dir ../../docs -wrapped          # 列出全部“函数体片段”（靠 run() error 包装才编译的块）
 //	go run . -dir ../../docs -j 4              # 限定并行度（默认按 CPU 数）
 //	go run . -dir ../../docs -cache=false      # 关掉块级缓存，全部重跑
 //	go run . -cache-clear                      # 清空块级缓存后退出
@@ -98,6 +99,7 @@ var (
 	dir          = flag.String("dir", "docs", "文档目录")
 	withExamples = flag.Bool("examples", true, "是否运行示例输出检查（较慢）")
 	unbuiltAll   = flag.Bool("unbuilt", false, "列出全部“有期望输出却没跑起来”的块（默认只列前 20 条）")
+	wrappedAll   = flag.Bool("wrapped", false, "列出全部“只有包进 func run() error 才编译”的函数体片段（默认只列前 5 条）")
 	allBlocks    = flag.Bool("all", false, "连没有期望输出的块也编译运行一遍（诊断用，见 checkExamples）")
 	verbose      = flag.Bool("v", false, "打印每个通过的检查项")
 	// 下面三个只管第 4 项的速度：缓存命中时连 go 进程都不用起。
@@ -317,13 +319,12 @@ func checkAnchors(docs []doc, verbose bool) int {
 var printLineRe = regexp.MustCompile(`fmt\.Print[fmln]*\(`)
 var expectRe = regexp.MustCompile(`//\s*(.+)$`)
 
-// 只把"看起来像 Go 打印结果"的注释当作断言，避免把说明性文字误判成输出
+// valueShapeRe 判断一个 token 是否"看起来像值"：逐 token 回退比对时（见 allTokensPresent）
+// 用它把纯标点过滤掉。提取期望输出（expectations）**不再**用它，那里的默认是"这就是输出"，
+// 原因见 expectations 的注释。
 var valueShapeRe = regexp.MustCompile(`^[\[\{"'\-]|^-?\d|^(true|false|nil|map\[|<\w+>)`)
 
 var qualifierRe = regexp.MustCompile(`\b([a-zA-Z_][a-zA-Z0-9_]*)\.`)
-
-// 说明性注释里常见的开头，出现这些一律不当断言
-var prosePrefix = []string{"形如", "例如", "注意", "这里", "说明", "示意", "每次", "取决于"}
 
 var imports = map[string]string{
 	"fmt": "fmt", "strings": "strings", "slices": "slices", "maps": "maps", "cmp": "cmp",
@@ -565,11 +566,21 @@ func stripComments(code string) string {
 	return out.String()
 }
 
-// expectations 提取"打印行上标出的期望输出"
+// expectations 提取"打印行上标出的期望输出"。
+//
+// 判据是**反过来的**：默认认为注释就是期望输出，只有明确指出"这行不是在给输出"才跳过
+// （整行被注释掉、剥掉解释后仍有中文）。反过来用白名单（要求首字符是 [ { " ' - 数字，
+// 或 true/false/nil/map[/<word>）会漏掉一大批以字母、符号开头的真输出：`// hello`、
+// `// Tom 18`、`// *int`、`// G 1` 全都被当成说明文字跳过，块照跑、输出从不比对——
+// 20 篇把 `utf8.DecodeRuneInString` 的结果写成 `// G 1`（实际是 `71 1`）就是这样躲过 CI 的。
 func expectations(code string) []string {
 	var out []string
 	for _, line := range strings.Split(code, "\n") {
 		if !printLineRe.MatchString(line) {
+			continue
+		}
+		// 整行都是注释（`// fmt.Println(x) // 非法`）说明这行没真的跑，不是期望输出。
+		if strings.HasPrefix(strings.TrimSpace(line), "//") {
 			continue
 		}
 		m := expectRe.FindStringSubmatch(line)
@@ -586,19 +597,23 @@ func expectations(code string) []string {
 		if c == "" || strings.Contains(c, "…") || strings.Contains(c, "...") {
 			continue
 		}
-		skip := false
-		for _, p := range prosePrefix {
-			if strings.HasPrefix(c, p) {
-				skip = true
-				break
-			}
-		}
-		if skip || !valueShapeRe.MatchString(c) {
+		// 剥掉解释之后还有中文，说明这行在解释而不是在给输出（`// 标准正态分布`）。
+		if hasHan(c) {
 			continue
 		}
 		out = append(out, c)
 	}
 	return out
+}
+
+// hasHan 报告字符串里是否还有中日韩文字或全角标点。说明性注释一律含中文，所以这一条
+// 同时覆盖了原先那张散文前缀表（形如/例如/注意/这里/说明/示意/每次/取决于），不再需要它。
+func hasHan(s string) bool {
+	return strings.ContainsFunc(s, func(r rune) bool {
+		return (r >= 0x3000 && r <= 0x303F) || // CJK 标点：、。「」…
+			(r >= 0x4E00 && r <= 0x9FFF) || // 汉字
+			(r >= 0xFF00 && r <= 0xFFEF) // 全角字符：，：（）…
+	})
 }
 
 // ---------- 3. 篇首的 Go 版本 ----------
@@ -709,11 +724,15 @@ type exTask struct {
 // exResult 是一个块的执行结果，也是缓存里存的东西。
 //
 //   - Ran：块独立编译并运行成功，Got 是它的输出；
+//   - Wrapped：这个块只有包进 `func run() error`（或 `run() (any, any)`）才编译得过，
+//     说明它是"写在返回 error 的函数里"的片段。CI 里能跑，但读者直接粘进 main() 会报
+//     `too many return values`——所以单独统计并在末尾提一句（不是错误）；
 //   - PackageDecl：块里带 package 声明，本来就无法包装（不是错误，-all 里也不报 FAIL）；
 //   - ErrMsg：没能独立跑起来时的第一条诊断，进"依赖前文片段"清单；
 //   - TimedOut：超时。它不进缓存——超时可能是机器负载导致的偶发，存下来会一直错下去。
 type exResult struct {
 	Ran         bool   `json:"ran"`
+	Wrapped     bool   `json:"wrapped,omitempty"`
 	PackageDecl bool   `json:"pkgDecl,omitempty"`
 	Got         string `json:"got,omitempty"`
 	ErrMsg      string `json:"errMsg,omitempty"`
@@ -723,7 +742,7 @@ type exResult struct {
 
 // cacheSchema 参与缓存键：checkdocs 的包装方式（buildPrograms/splitDecls）或比对规则改了、
 // 老结论可能不再成立时，把它 +1，旧缓存自动失效。
-const cacheSchema = "v1"
+const cacheSchema = "v2"
 
 // blockKey 是块级缓存的键。一段代码的结果只取决于它自己、Go 版本和平台：每个块都是在同一个
 // 临时模块里独立编译的，不读同篇的其它块（依赖前文定义的片段，结果是"编译失败"，同样稳定）。
@@ -850,7 +869,8 @@ func runBlock(tmp string, i int, code string) exResult {
 	var out []byte
 	var lastErr error
 	timedOut := false
-	for _, src := range candidates {
+	used := 0 // 编译成功的候选下标：0 是普通 main()，后面的都是片段包装
+	for ci, src := range candidates {
 		if err := os.WriteFile(file, []byte(src), 0o644); err != nil {
 			lastErr = err
 			continue
@@ -868,6 +888,7 @@ func runBlock(tmp string, i int, code string) exResult {
 		cancel()
 		lastErr = err
 		if err == nil {
+			used = ci
 			break
 		}
 		if timedOut {
@@ -876,7 +897,7 @@ func runBlock(tmp string, i int, code string) exResult {
 	}
 	switch {
 	case lastErr == nil:
-		return exResult{Ran: true, Got: string(out)}
+		return exResult{Ran: true, Got: string(out), Wrapped: used > 0}
 	case timedOut:
 		return exResult{TimedOut: true}
 	default:
@@ -919,7 +940,7 @@ func checkExamples(docs []doc, goVersion string, verbose bool) int {
 	results, hits := runBlocks(tmp, tasks, goVersion, cache, workers)
 
 	ran, skipped, bad := 0, 0, 0
-	var unbuilt []string
+	var unbuilt, wrapped []string
 	// 统计与打印统一按文档顺序走一遍：并行执行，输出顺序和串行时完全一样。
 	for i, t := range tasks {
 		r := results[i]
@@ -936,6 +957,9 @@ func checkExamples(docs []doc, goVersion string, verbose bool) int {
 			}
 		default:
 			ran++
+			if r.Wrapped {
+				wrapped = append(wrapped, fmt.Sprintf("%s:%d", t.doc, t.line))
+			}
 			if *allBlocks {
 				fmt.Printf("  OK   %s:%d（断言 %d 条）\n", t.doc, t.line, len(t.want))
 			}
@@ -951,7 +975,7 @@ func checkExamples(docs []doc, goVersion string, verbose bool) int {
 		// 只缓存"跑成功"的块：编译失败可能是环境偶发（模块解析、并发压力），存下来会
 		// 一直错下去；而失败本来很快，重跑也不贵。
 		if r.Ran {
-			cache[blockKey(goVersion, t.code)] = exResult{Ran: true, Got: r.Got}
+			cache[blockKey(goVersion, t.code)] = exResult{Ran: true, Got: r.Got, Wrapped: r.Wrapped}
 		}
 	}
 	saveCache(cachePath, cache)
@@ -959,6 +983,23 @@ func checkExamples(docs []doc, goVersion string, verbose bool) int {
 	fmt.Printf("  实际运行 %d 个可运行块，跳过 %d 个依赖上下文的块\n", ran, skipped)
 	if verbose {
 		fmt.Printf("  并行 %d 路，块级缓存命中 %d/%d\n", workers, hits, len(tasks))
+	}
+	if len(wrapped) > 0 {
+		// 这一条不是错误：块跑起来了、断言也比过了，只是它靠"包进 run() error"才编译得过。
+		// 读者照抄进 main() 会撞上 too many return values，所以报出来让人知道缺口在哪。
+		fmt.Printf("  其中 %d 个块是函数体片段：只有包进 func run() error 才能编译，直接粘进 main() 会报 too many return values\n", len(wrapped))
+		fmt.Println("    要直接跑就把裸 return err / return nil, … 换成 log.Fatal(err)（约定见 01-变量与基础类型.md 开头）：")
+		maxWrapped := 5
+		if *wrappedAll {
+			maxWrapped = len(wrapped)
+		}
+		for i, msg := range wrapped {
+			if i == maxWrapped {
+				fmt.Printf("    ……另有 %d 处（加 -wrapped 看完整列表）\n", len(wrapped)-maxWrapped)
+				break
+			}
+			fmt.Printf("    %s\n", msg)
+		}
 	}
 	if len(unbuilt) > 0 {
 		// 只列前若干条：这些块"写了期望输出却没跑起来"，可能是依赖前文的片段，

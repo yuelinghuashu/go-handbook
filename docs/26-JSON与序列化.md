@@ -21,7 +21,8 @@ u := User{Name: "Tom", Age: 18}
 
 data, err := json.Marshal(u)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(string(data)) // {"name":"Tom","age":18}
@@ -36,7 +37,8 @@ var u User
 
 err := json.Unmarshal(data, &u)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(u.Name, u.Age) // Tom 18
@@ -64,7 +66,7 @@ type User struct {
 这两个选项看起来接近，但判断标准完全不同：
 
 - `omitzero` 判断的是 **Go 值是不是零值**。类型如果有 `IsZero() bool` 方法就调用它，否则直接比较零值。
-- `omitempty` 判断的是**输出结果**。v2 里明确为“编码后是不是空的 JSON 值”，JSON null、空字符串、空对象、空数组**都算空、都会被省略**；v1 里则退化为“Go 值是不是空”，也就是 false、0、nil 指针、nil 接口，以及空的数组、切片、map、字符串。
+- `omitempty` 判断的是**输出结果**。v1 里它退化为“Go 值是不是空”，也就是 false、0、nil 指针、nil 接口，以及空的数组、切片、map、字符串；v2 把这个判据改成“编码后是不是空的 JSON 值”，JSON null、空字符串、空对象、空数组**都算空、都会被省略**。
 
 时间类型是两者分歧最明显的地方。`time.Time` 是结构体，它的零值既不是数字也不是 nil，所以 **`omitempty` 对它无效**：
 
@@ -77,16 +79,7 @@ data, _ := json.Marshal(Event{})
 fmt.Println(string(data)) // {"at":"0001-01-01T00:00:00Z"}，零值时间照样输出
 ```
 
-`time.Duration` 的底层是 `int64`，情况更微妙：v1 认为 0 属于“空”所以会省略它，v2 认为数字 0 不是空的 JSON 值所以**不**省略，紧接着又发现 v2 没有 Duration 的默认表示，于是直接报错：
-
-```go
-type Event struct {
-    D time.Duration `json:"d,omitempty"`
-}
-
-_, err := jsonv2.Marshal(Event{})
-fmt.Println(err) // json: cannot marshal from Go time.Duration within "/d": no default representation
-```
+`time.Duration` 的底层是 `int64`，情况更微妙：v1 认为 0 属于“空”所以会省略它，而 v2 的判据不同（数字 0 不是空的 JSON 值）、也没有 `Duration` 的默认表示，于是直接报错——这两处的实测见“v1 与 v2 的差异、Duration 在 v2 中会直接报错”两节。
 
 同一份结构体在 v1 和 v2 下表现不同，正是官方建议把 bool、数字、指针、接口字段上的 `omitempty` 换成 `omitzero` 的原因。换成 `omitzero` 之后，两个包对这个字段的空值判断就一致了：
 
@@ -133,7 +126,8 @@ decoder := json.NewDecoder(reader)
 
 var u User
 if err := decoder.Decode(&u); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -141,7 +135,8 @@ if err := decoder.Decode(&u); err != nil {
 encoder := json.NewEncoder(writer)
 
 if err := encoder.Encode(u); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -157,7 +152,8 @@ decoder.DisallowUnknownFields()
 ```go
 data, err := json.MarshalIndent(u, "", "  ") // 带缩进的输出，用于人读或落盘
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(json.Valid(data)) // 判断一段字节是否是合法 JSON
@@ -192,9 +188,7 @@ v1 对两个时间类型的处理是固定的：
 
 ## encoding/json/v2
 
-Go 1.27 标准库提供 `encoding/json/v2`。它提供了新的语义和更丰富的选项。
-
-导入：
+前面 v1 那节里露过面的几处差异（`omitempty` 与 `omitzero` 的判据、`Duration` 会报错、以及 v1 新增的那组 `Options`）都属于这个包：Go 1.27 起 `encoding/json/v2` 随标准库提供，默认行为更严格、选项体系也更完整。下面按 v1 那节的顺序过一遍它的 API，重点放在不一样的地方；导入时按本篇惯例起别名 `jsonv2`：
 
 ```go
 import jsonv2 "encoding/json/v2"
@@ -205,7 +199,8 @@ import jsonv2 "encoding/json/v2"
 ```go
 data, err := jsonv2.Marshal(u)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(string(data)) // {"name":"Tom","age":18}
@@ -218,7 +213,8 @@ var u User
 
 err := jsonv2.Unmarshal(data, &u)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -232,7 +228,8 @@ data, err := jsonv2.Marshal(u,
     jsonv2.OmitZeroStructFields(true),
 )
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -241,7 +238,8 @@ err := jsonv2.Unmarshal(data, &u,
     jsonv2.RejectUnknownMembers(true),
 )
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -293,13 +291,15 @@ v2 支持的 tag 选项包括：
 
 ```go
 if err := jsonv2.MarshalWrite(writer, u); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
 ```go
 if err := jsonv2.UnmarshalRead(reader, &u); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -309,7 +309,8 @@ if err := jsonv2.UnmarshalRead(reader, &u); err != nil {
 encoder := jsontext.NewEncoder(writer)
 
 if err := jsonv2.MarshalEncode(encoder, u); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -317,7 +318,8 @@ if err := jsonv2.MarshalEncode(encoder, u); err != nil {
 decoder := jsontext.NewDecoder(reader)
 
 if err := jsonv2.UnmarshalDecode(decoder, &u); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -337,7 +339,8 @@ for {
         break
     }
     if err != nil {
-        return err
+        fmt.Println(err)
+        return
     }
 
     // Kind 是 token 种类，String 是它的原始字面量
@@ -353,7 +356,8 @@ decoder := jsontext.NewDecoder(reader)
 
 value, err := decoder.ReadValue()
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 // Value 可以当 []byte 用：Kind 看种类，直接转字符串就是原始 JSON 文本
@@ -369,16 +373,20 @@ fmt.Println(string(data)) // 按原始 JSON 文本打印，内容与 reader 里�
 encoder := jsontext.NewEncoder(writer)
 
 if err := encoder.WriteToken(jsontext.BeginObject); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 if err := encoder.WriteToken(jsontext.String("name")); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 if err := encoder.WriteToken(jsontext.String("Tom")); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 if err := encoder.WriteToken(jsontext.EndObject); err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 ```
 
@@ -444,12 +452,12 @@ fmt.Println(err) // jsontext: duplicate object member name "a"
 
 先按需求定位到层，再看下面的取舍：
 
-| 你的处境 | 用哪一层 | 关键理由 |
-| --- | --- | --- |
-| 已有项目、不想动行为 | `encoding/json`（v1） | 语义承诺不变，底层已是 v2，长期仍维护 |
-| 新项目，想要严格解析与完整选项 | `encoding/json/v2` | 默认拒绝非法 UTF-8 与重复成员名，脏数据当场暴露 |
-| 只要读出一两个字段、其余跳过；或按 token 增量写大 JSON | `encoding/json/jsontext` | 不想为了一点内容把整个文档解析成 `any` |
-| 想用 v2 但某些字段要保留 v1 行为 | v2 + v1 选项 | `jsonv2.Marshal(v, json.DefaultOptionsV1())`，不必退回 v1 包 |
+| 你的处境                                               | 用哪一层                 | 关键理由                                                     |
+| ------------------------------------------------------ | ------------------------ | ------------------------------------------------------------ |
+| 已有项目、不想动行为                                   | `encoding/json`（v1）    | 语义承诺不变，底层已是 v2，长期仍维护                        |
+| 新项目，想要严格解析与完整选项                         | `encoding/json/v2`       | 默认拒绝非法 UTF-8 与重复成员名，脏数据当场暴露              |
+| 只要读出一两个字段、其余跳过；或按 token 增量写大 JSON | `encoding/json/jsontext` | 不想为了一点内容把整个文档解析成 `any`                       |
+| 想用 v2 但某些字段要保留 v1 行为                       | v2 + v1 选项             | `jsonv2.Marshal(v, json.DefaultOptionsV1())`，不必退回 v1 包 |
 
 - **现有项目继续用 `encoding/json`**。它的行为不会变，而且现在底层就是 v2，长期看也会持续维护。
 - **新项目在 Go 1.27 上可以评估 `encoding/json/v2`**：默认更严格，能挡掉非法 UTF-8 和重复成员名这类脏数据，选项体系也更完整。

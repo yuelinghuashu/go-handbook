@@ -58,13 +58,15 @@ msg := []byte("hello")
 
 priv, err := mldsa.GenerateKey(mldsa.MLDSA65())
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 // Sign 返回两个值（签名、错误）；第一个参数是 io.Reader，被忽略，直接传 nil
 sig, err := priv.Sign(nil, msg, nil)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 err = mldsa.Verify(priv.PublicKey(), msg, sig, nil) // 验签通过返回 nil
@@ -107,7 +109,8 @@ shared, err := priv.ECDH(peerPublicKey)
 ```go
 dk, err := mlkem.GenerateKey768()
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 // 发送方：得到共享密钥、以及要传给接收方的密文
@@ -129,14 +132,16 @@ kem := hpke.DHKEM(ecdh.X25519())
 // 接收方生成密钥对，公钥发出去
 sk, err := kem.GenerateKey()
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 pk := sk.PublicKey()
 
 // 发送方：用接收方公钥密封载荷（info 是双方约定的上下文，两侧必须一致）
 ct, err := hpke.Seal(pk, hpke.HKDFSHA256(), hpke.AES128GCM(), []byte("my-app"), payload)
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 // 接收方：用自己的私钥打开

@@ -244,6 +244,36 @@ func TestExpectationsStripsFullWidthColon(t *testing.T) {
 	}
 }
 
+// 以字母或符号开头的期望输出同样是断言。
+//
+// 早先用白名单判断"注释像不像输出"（首字符必须是 [ { " ' - 数字，或 true/false/nil/
+// map[/<word>），于是 `// G 1`、`// hello`、`// *int` 这些全被当说明文字跳过、从不比对：
+// 20 篇把 `utf8.DecodeRuneInString` 的结果写成 `// G 1`（实际是 `71 1`）能一直留在文档里，
+// 就是靠这个漏洞。现在默认即断言，只排除"整行被注释掉"和"含中文的说明"两种情况。
+func TestExpectationsLetterInitial(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"fmt.Println(r, size) // G 1", "G 1"},
+		{"fmt.Println(u.Hello()) // hello, Tom", "hello, Tom"},
+		{"fmt.Printf(\"%T\\n\", v) // *int", "*int"},
+		{"fmt.Println(e.Name) // Tom —— 提升字段", "Tom"},
+		{"// fmt.Println(s.Name) // 非法", ""},
+		{"fmt.Println(rand.NormFloat64()) // 标准正态分布", ""},
+		{"fmt.Println(x) // 形如 1 2 3", ""},
+	}
+	for _, tt := range tests {
+		got := expectations(tt.in)
+		if tt.want == "" {
+			if len(got) != 0 {
+				t.Errorf("expectations(%q) = %v，期望不产生断言", tt.in, got)
+			}
+			continue
+		}
+		if len(got) != 1 || got[0] != tt.want {
+			t.Errorf("expectations(%q) = %v，期望 [%s]", tt.in, got, tt.want)
+		}
+	}
+}
+
 // 链接目标里的 #锚点、<> 包裹都不该影响“这个文件存不存在”的判断。
 func TestLinkTarget(t *testing.T) {
 	tests := []struct{ in, want string }{

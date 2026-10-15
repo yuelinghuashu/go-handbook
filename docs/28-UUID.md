@@ -63,7 +63,8 @@ func New() UUID {
 ```go
 id, err := uuid.Parse("f81d4fae-7dec-11d0-a765-00a0c91e6bf6")
 if err != nil {
-    return err
+    fmt.Println(err)
+    return
 }
 
 fmt.Println(id.String()) // f81d4fae-7dec-11d0-a765-00a0c91e6bf6 —— 与输入一致，输出固定规范形式
