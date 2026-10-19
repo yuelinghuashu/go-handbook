@@ -57,7 +57,7 @@ make clean-cache # 缓存出怪问题时清掉它（GOCACHE、仓库内的 .goca
 | [06 数组](docs/06-数组.md)     | 值语义、长度是类型的一部分、数组与切片互转                         |
 | [07 切片](docs/07-切片.md)     | 底层数组、`len`/`cap`、`append` 增长、共享与重叠、`copy`、内存保留 |
 | [08 map](docs/08-map.md)       | 零值语义、comma-ok、key 要求、遍历顺序、并发安全的边界             |
-| [09 struct](docs/09-struct.md) | 字面量、比较、匿名结构体、嵌套与嵌入、标签、空结构体               |
+| [09 struct](docs/09-struct.md) | 字面量、比较、匿名结构体、嵌套与嵌入、标签、空结构体、指针字段     |
 
 ### 面向对象与泛型
 
